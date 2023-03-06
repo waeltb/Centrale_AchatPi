@@ -29,7 +29,7 @@ public class Order implements Serializable {
     @ManyToMany()
     List<Product>products;
     @JsonIgnore
-    @OneToOne(mappedBy = "order", cascade = {CascadeType.PERSIST} )
+    @OneToOne(mappedBy = "order", cascade = {CascadeType.PERSIST,CascadeType.REMOVE} )
     Bill bill;
     @JsonIgnore
     @ManyToOne
