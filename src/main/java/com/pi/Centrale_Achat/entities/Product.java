@@ -36,6 +36,7 @@ public class Product implements Serializable {
     @JsonIgnore
     @ManyToMany(mappedBy = "products", cascade = {CascadeType.PERSIST})
     List<Order> orders;
+    @JsonIgnore
     @ManyToOne
     Category category;
     @OneToMany(mappedBy = "product")
@@ -43,6 +44,7 @@ public class Product implements Serializable {
     @JsonIgnore
     @ManyToOne
     User user;
+    @JsonIgnore
     @ManyToOne
     Tender tender;
 
