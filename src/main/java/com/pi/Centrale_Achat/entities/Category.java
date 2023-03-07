@@ -1,4 +1,5 @@
 package com.pi.Centrale_Achat.entities;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +19,10 @@ public class Category implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id ;
     String nameCategory;
+    @JsonIgnore
     @OneToMany(mappedBy = "category",cascade = {CascadeType.PERSIST})
     List<Product>products;
+    @JsonIgnore
     @ManyToOne
     User user;
 }

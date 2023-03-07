@@ -1,4 +1,5 @@
 package com.pi.Centrale_Achat.entities;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,6 +45,7 @@ public class User implements Serializable {
     List<Order>orders;
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
     List<Product>products;
+    @JsonIgnore
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
     List<Category>categories;
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})

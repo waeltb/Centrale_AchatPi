@@ -72,6 +72,7 @@ public class JwtUtils {
     }
 
     public String generateTokenFromUsername(String username) {
+
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
@@ -80,3 +81,5 @@ public class JwtUtils {
                 .compact();
     }
 }
+
+
