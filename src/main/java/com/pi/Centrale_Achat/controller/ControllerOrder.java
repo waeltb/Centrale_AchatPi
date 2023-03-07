@@ -1,21 +1,28 @@
 package com.pi.Centrale_Achat.controller;
 import com.pi.Centrale_Achat.entities.Order;
+import com.pi.Centrale_Achat.entities.User;
+import com.pi.Centrale_Achat.repositories.UserRepo;
 import com.pi.Centrale_Achat.serviceImpl.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("order")
+@RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class ControllerOrder {
     private final OrderServiceImpl orderService;
 
     @PostMapping("/add/{id}/{idP}")
-    public Order add(@RequestBody Order o, @PathVariable("id") int id, @PathVariable("idP") int idP) {
-        return orderService.ajouter(o, id, idP);
+    public Order add(@RequestBody Order o,@PathVariable("id") int id, @PathVariable("idP") int idP) {
+        return orderService.ajouter( o ,id, idP);
     }
 
     @DeleteMapping("/delete/{id}")

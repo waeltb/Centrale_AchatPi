@@ -52,6 +52,55 @@ public class User implements Serializable {
     List<RequestClaim>requestClaims;
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
     List<OperatorScore>operatorScores;
+    public User(String nom,String prenom,String username,String email,String password,Date dateNaissance){
+        this.nom = nom;
+        this.prenom =prenom ;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.dateNaissance = dateNaissance ;
+    }
+
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "Client [id_user=" + id + ", nom=" + nom + ", prenom=" + prenom + ", dateNaissance="
+                + dateNaissance + ", email=" + email + "]";
+    }
+
+    public String getResetpasswordcode() {
+        return resetpasswordcode;
+    }
+
+    public void setResetpasswordcode(String resetpasswordcode) {
+        this.resetpasswordcode = resetpasswordcode;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+
+    public int getId() {
+        return id;
+    }
 
 
 }
