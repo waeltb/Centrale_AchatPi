@@ -7,7 +7,9 @@ import com.pi.Centrale_Achat.repositories.ProductRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
 import com.pi.Centrale_Achat.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import java.util.*;
@@ -21,40 +23,10 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepo productRepo;
 
 
-//    public Order ajouter(@AuthenticationPrincipal UserDetails userDetails, Order order , int idP) {
-//        String currentUser = userDetails.getUsername();
-//        User user1 = userRepo.findUserByUsername(currentUser);
-//        Product p = productRepo.findById(idP).orElse(null);
-//        if (order.getProducts() == null) {
-//            if (p.getQte() > order.getQte()) {
-//                p.setQte(p.getQte() - order.getQte());
-//                productRepo.save(p);
-//                List<Product> products = new ArrayList<>();
-//                products.add(p);
-//                order.setProducts(products);
-//                order.setUser(user1);
-//                orederRepo.save(order);
-//            } else {
-//                System.out.println("invalid qte");
-//            }
-//        } else {
-//            if (p.getQte() > order.getQte()) {
-//                p.setQte(p.getQte() - order.getQte());
-//                order.getProducts().add(p);
-//                order.setUser(user1);
-//                orederRepo.save(order);
-//            } else {
-//                System.out.println("invalid qte");
-//            }
-//        }
-//        return order;
-//
-//    }
-
-    public Order ajouter(Order order ,int id, int idP) {
-        User user = userRepo.findById(id).orElse(null);
+    public Order ajouter(@AuthenticationPrincipal UserDetails userDetails, Order order , int idP) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
         Product p = productRepo.findById(idP).orElse(null);
-
         if (order.getProducts() == null) {
             if (p.getQte() > order.getQte()) {
                 p.setQte(p.getQte() - order.getQte());
@@ -62,7 +34,7 @@ public class OrderServiceImpl implements OrderService {
                 List<Product> products = new ArrayList<>();
                 products.add(p);
                 order.setProducts(products);
-                order.setUser(user);
+                order.setUser(user1);
                 orederRepo.save(order);
             } else {
                 System.out.println("invalid qte");
@@ -71,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
             if (p.getQte() > order.getQte()) {
                 p.setQte(p.getQte() - order.getQte());
                 order.getProducts().add(p);
-                order.setUser(user);
+                order.setUser(user1);
                 orederRepo.save(order);
             } else {
                 System.out.println("invalid qte");
@@ -82,23 +54,33 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void delete(int id) {
-        orederRepo.deleteById(id);
+    public void delete(@AuthenticationPrincipal UserDetails userDetails,int id) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
+        Order order = orederRepo.findById(id).orElse(null);
+        if(order.getUser().getId()==user1.getId()){
+            orederRepo.deleteById(id);
+        }
+        else {
+            System.out.println("erreur");
+        }
+
+
     }
-    @Override
-    public List<Order> getAll() {
-        return orederRepo.findAll();
-    }
+
     @Override
     public int countCmdBetweenToDate(Date date1, Date date2) {
         return orederRepo.countOrdersByDatCmdBetween(date1,date2);
     }
     @Override
     public Order findOrderByDate(Date d) {
-
         return orederRepo.findOrderByDatCmd(d);
     }
 
+    @Override
+    public List<Order> getOrdersForUser(User user) {
+        return orederRepo.findByUser(user);
+    }
 
 
 

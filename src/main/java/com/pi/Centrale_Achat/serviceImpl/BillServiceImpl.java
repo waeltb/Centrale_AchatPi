@@ -1,5 +1,8 @@
 package com.pi.Centrale_Achat.serviceImpl;
 import com.pi.Centrale_Achat.entities.*;
+import com.pi.Centrale_Achat.repositories.UserRepo;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import com.pi.Centrale_Achat.repositories.BillRepo;
 import com.pi.Centrale_Achat.repositories.OrderRepo;
@@ -18,16 +21,27 @@ import java.util.stream.Collectors;
 public class BillServiceImpl implements BillService {
     private final BillRepo billRepo;
     private final OrderRepo orderRepo;
+    private final UserRepo userRepo;
 
 
     @Override
-    public Bill addFacture(Bill b, int idCmd) {
+    public Bill addFacture(@AuthenticationPrincipal UserDetails userDetails, Bill b, int idCmd) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
         Order o = orderRepo.findById(idCmd).orElse(null);
-        b.setCode(UUID.randomUUID().toString());
-        b.setDateFacture(LocalDate.now());
-        b.setOrder(o);
-        b.setPrice(calculeFacture(idCmd));
-        return billRepo.save(b);
+        String name= o.getUser().getUsername();
+        if(!(user1.getUsername()==name)){
+            System.out.println("erreur");
+        }
+        else {
+            b.setCode(UUID.randomUUID().toString());
+            b.setDateFacture(LocalDate.now());
+            b.setOrder(o);
+            b.setPrice(calculeFacture(idCmd));
+            return billRepo.save(b);
+        }
+        return b;
+
     }
 
     @Override
@@ -42,14 +56,13 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public List<Bill> getAll() {
-        return billRepo.findAll();
+    public List<Bill> getBillsForUser(@AuthenticationPrincipal UserDetails userDetails) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
+        return billRepo.findByOrderUser(user1);
     }
 
-    @Override
-    public void delete(int id) {
-        billRepo.deleteById(id);
-    }
+
 
     @Override
     public Bill topFacture() {
@@ -63,6 +76,7 @@ public class BillServiceImpl implements BillService {
         }
         return bb;
     }
+
 
 
 

@@ -1,15 +1,12 @@
 package com.pi.Centrale_Achat.service;
 
 import com.pi.Centrale_Achat.entities.*;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.StreamUtils;
+
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Date;
+
 import java.util.List;
 
 public interface ProductService {
@@ -19,7 +16,9 @@ public interface ProductService {
     List<Product>show_User_Products();
 
 
-    Product save(String name, float price, int qte, String description, int minStock, int idCategory, MultipartFile file, int idUser) throws IOException ;
+
+    Product save(UserDetails userDetails,String name, float price, int qte, String description, int minStock, int idCategory, MultipartFile file) throws IOException ;
+
 
 
     Product modifier(String name,  float price, String description, int minStock, MultipartFile file, int idUser,int idP) throws IOException ;
