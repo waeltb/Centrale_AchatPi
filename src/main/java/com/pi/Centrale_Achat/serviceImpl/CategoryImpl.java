@@ -1,6 +1,7 @@
 package com.pi.Centrale_Achat.serviceImpl;
 
 import com.pi.Centrale_Achat.entities.Category;
+
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.CategoryRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryImpl implements CategoryService {
     private final CategoryRepo categoryRepo ;
+
 
     private  final UserRepo userRepo;
 
@@ -34,10 +37,12 @@ public class CategoryImpl implements CategoryService {
         String currentUser = userDetails.getUsername();
         User user1 = userRepo.findUserByUsername(currentUser);
         ca.setUser(user1);
+
         return categoryRepo.save(ca);
     }
 
     @Override
+
     public Category modifierCategorie(@AuthenticationPrincipal UserDetails userDetails, Category ca) {
         String currentUser = userDetails.getUsername();
         User user1 = userRepo.findUserByUsername(currentUser);
@@ -72,5 +77,6 @@ for (Category c : categories){
                 categoryRepo.deleteById(idc);
             }
         }
+
     }
 }

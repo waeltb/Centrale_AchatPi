@@ -1,13 +1,17 @@
 package com.pi.Centrale_Achat.controller;
 
 import com.pi.Centrale_Achat.entities.Category;
+<
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.CategoryRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
+
+
 import com.pi.Centrale_Achat.serviceImpl.CategoryImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,12 +25,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/category")
+
+
 @RequiredArgsConstructor
 public class ControllerCategory {
     private final CategoryImpl categoryservice;
 
+
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo ;
+
 
     @GetMapping("/")
     public ResponseEntity<?> index(){
@@ -34,6 +42,7 @@ public class ControllerCategory {
         return ResponseEntity.ok("hiiiiiiiiii");
     }
     @GetMapping("/getAll")
+
     @PreAuthorize("hasRole('SUPPLIER')")
     public ResponseEntity<?> index_Category(@AuthenticationPrincipal UserDetails userDetails){
         String currentUserName = userDetails.getUsername();
@@ -91,6 +100,7 @@ public class ControllerCategory {
          return new ResponseEntity<>("Not found ", HttpStatus.NOT_FOUND);
 
     }
+
     }
 
 }

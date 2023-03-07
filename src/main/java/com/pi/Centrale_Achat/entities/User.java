@@ -43,11 +43,13 @@ public class User implements Serializable {
     private Set<Role> roles = new HashSet<>();
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
     List<Order>orders;
+    @JsonIgnore
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
     List<Product>products;
     @JsonIgnore
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
     List<Category>categories;
+    @JsonIgnore
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
     List<Tender>tenders;
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})

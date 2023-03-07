@@ -1,16 +1,21 @@
 package com.pi.Centrale_Achat.serviceImpl;
+
 import com.pi.Centrale_Achat.entities.*;
 import com.pi.Centrale_Achat.repositories.*;
 import com.pi.Centrale_Achat.service.ProductService;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -31,10 +36,12 @@ public class ProductServiceImpl implements ProductService {
     private final StockRepo mvStockRepo;
     private final OrderRepo orderRepo;
     private final CategoryRepo categoryRepo;
+
 //    @Autowired
 //    private AlertService alertService;
 //    @Autowired
 //    private NotifierClient notifierClient;
+
     @Autowired
     private TenderRepo tenderRepo;
     @Override
@@ -54,9 +61,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+
     public Product save(@AuthenticationPrincipal UserDetails userDetails, String name, float price, int qte, String description, int minStock, int idCategory, MultipartFile file) throws IOException {
         String currentUser = userDetails.getUsername();
         User user1 = userRepo.findUserByUsername(currentUser);
+
         Product p = new Product();
         p.setImage(file.getOriginalFilename());
         Files.copy(file.getInputStream(), Paths.get("src/main/resources/imageProduct/" + file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
@@ -66,7 +75,9 @@ public class ProductServiceImpl implements ProductService {
         p.setMinStock(minStock);
         p.setCategory(categoryRepo.findById(idCategory).orElse(null));
         p.setQte(qte);
+
         p.setUser(user1);
+
         productRepo.save(p);
         MvStock mvStk = new MvStock();
         mvStk.setProduct(p);
@@ -74,7 +85,10 @@ public class ProductServiceImpl implements ProductService {
         mvStk.setTypeMvt(TypeMvStock.entree);
         mvStk.setQuantiteMvt(qte);
         mvStockRepo.save(mvStk);
+
         return p;      }
+
+
     @Override
     public Product modifier(String name, float price, String description, int minStock, MultipartFile file, int idUser, int idP) throws IOException {
 
@@ -111,12 +125,15 @@ public class ProductServiceImpl implements ProductService {
         Product p = productRepo.findById(idP).orElse(null);
         String photoName = p.getImage();
 
+
         // var imgFile = new ClassPathResource("imageProduct/" + photoName);
 
         ClassPathResource resource = new ClassPathResource("imageProduct/c1.PNG");
         InputStream inputStream = resource.getInputStream();
 
+
         // byte[] bytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
+
         byte[] bytes = StreamUtils.copyToByteArray(inputStream);
         return bytes;
     }
