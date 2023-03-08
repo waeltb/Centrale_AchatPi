@@ -1,5 +1,7 @@
 package com.pi.Centrale_Achat.serviceImpl;
 
+import com.pi.Centrale_Achat.entities.ERole;
+import com.pi.Centrale_Achat.entities.Role;
 import com.pi.Centrale_Achat.entities.Tender;
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.UserRepo;
@@ -44,11 +46,14 @@ public class EmailService {
 
         // send email to all users
         for (User user : users) {
-           // if (Role.g == ERole.operator) {
-                helper.setTo(user.getEmail());
-                javaMailSender.send(message);
-           // }
-        }
+            for (Role role :user.getRoles() ) {
+                if(role.getName()==ERole.ROLE_OPERATOR){
+                    helper.setTo(user.getEmail());
+                javaMailSender.send(message);}
+            }
+
+            }
+
     }
 }
 

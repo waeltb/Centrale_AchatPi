@@ -30,6 +30,7 @@ public class OperatorScoreRestController {
     public void assignoperatorscoreProduct(@RequestBody OperatorScore operatorScore, @PathVariable("idoperateur")  Integer idoperateur, @PathVariable("idproduct")Integer idproduct)
     {
         iOperatorScoreService.affectationoperaterscoreaproductetuser(operatorScore,idoperateur,idproduct);
+
         iOperatorScoreService.updateOperatorScore(idoperateur);
     }
 

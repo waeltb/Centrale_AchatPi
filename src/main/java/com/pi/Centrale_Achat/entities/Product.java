@@ -51,6 +51,7 @@ public class Product implements Serializable {
     public boolean isAccepted() {
         return accepted;
     }
+    @JsonIgnore
     @OneToMany(mappedBy = "product",cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
     List<OperatorScore> operatorScores;
     public Product(String name, String description, String imageUrl) {
