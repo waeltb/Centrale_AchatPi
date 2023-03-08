@@ -1,4 +1,7 @@
 package com.pi.Centrale_Achat.entities;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -6,7 +9,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
+import java.sql.Time;
 
 @Getter
 @Setter
@@ -17,15 +20,18 @@ public class Delivery implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
-    int RefDelivery;
-    float coastDelivery;
-    float totalCoast;
+    float costDelivery;
+    float totalCost;
     String adress;
+    Time startDate;
+    Time endDate;
+    @Enumerated(EnumType.STRING)
     StatusDelivery statusDelivery;
-    Date startDate;
-    Date endDate;
     @Enumerated(EnumType.STRING)
     TypeDelivery typeDelivery;
+
+
+    @JsonBackReference
     @OneToOne
     Order order;
 }

@@ -1,26 +1,19 @@
 package com.pi.Centrale_Achat.controller;
-
 import com.pi.Centrale_Achat.entities.Category;
 
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.CategoryRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
-
-
 import com.pi.Centrale_Achat.serviceImpl.CategoryImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -48,7 +41,6 @@ public class ControllerCategory {
         String currentUserName = userDetails.getUsername();
         User currentUser = userRepo.findUserByUsername(currentUserName);
         if (currentUser == null) {
-            // Handle error case where user is not found
             return new ResponseEntity<>("Not Found", HttpStatus.NOT_FOUND) ;
         } else
             return ResponseEntity.ok(categoryservice.show_All(userDetails));

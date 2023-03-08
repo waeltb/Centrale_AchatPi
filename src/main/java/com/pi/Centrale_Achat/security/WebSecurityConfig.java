@@ -66,8 +66,12 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests().antMatchers("/api/auth/**").permitAll()
                 .antMatchers("/api/test/**").hasAnyAuthority(ERole.ROLE_OPERATOR.toString())
+                .antMatchers("/api/mail/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString())
+                .antMatchers("/api/order/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString())
+                .antMatchers("/api/bill/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString())
                 .antMatchers("/api/product/**").hasAnyAuthority(ERole.ROLE_SUPPLIER.toString())
                 .antMatchers("/api/category/**").hasAnyAuthority(ERole.ROLE_SUPPLIER.toString())
+
                 .antMatchers("/api/tender/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString(),ERole.ROLE_OPERATOR.toString())
                 .antMatchers("/api/OperatorScore/**").permitAll()
                 .antMatchers("/api/comment/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString())
@@ -75,6 +79,9 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
 
 
+
+
+                .antMatchers("/api/delivery/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString(),ERole.ROLE_DELIVERY.toString())
 
 
 
