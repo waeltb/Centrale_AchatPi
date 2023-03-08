@@ -13,7 +13,7 @@ public interface ProductService {
     List<Product> show_AllProducts();
     List<Product> show_ProductsOf_Category(int idCategory);
 
-    List<Product>show_User_Products( User currentUser);
+    List<Product>show_User_Products(UserDetails userDetails);
 
 
 
@@ -21,9 +21,9 @@ public interface ProductService {
 
 
 
-    Product modifier(String name,  float price, String description, int minStock, MultipartFile file, int idUser,int idP) throws IOException ;
-    Product updateQuantity(int qte,int idP);
+    Product modifier(UserDetails userDetails,String name,  float price, String description, int minStock, MultipartFile file,int idP) throws IOException ;
+    Product updateQuantity(UserDetails userDetailsint ,int qte,int idP);
     byte[] findByIdImage(int idP) throws IOException ;
-    void delete(int idP);
+    void delete(UserDetails userDetails,int idP);
 
 }

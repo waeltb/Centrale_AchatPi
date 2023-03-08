@@ -1,14 +1,18 @@
 package com.pi.Centrale_Achat.serviceImpl;
 
 
+import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.RoleeRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
 import com.pi.Centrale_Achat.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+
+import static com.sun.mail.imap.protocol.BASE64MailboxDecoder.decode;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -17,53 +21,37 @@ public class UserServiceImpl implements UserService {
     @Autowired
     RoleeRepo roleRepository;
 
-//    @Autowired
-//    UniversREP universREP;
 
     @Autowired
     PasswordEncoder encoder;
 
-//    @Override
-//    public User addUser(User c) {
-//        return userRepository.save(c);
-//    }
 
-//    @Override
-//    public void deleteUser(Long id) {
-//        userRepository.deleteById(id);
-//    }
 
-//    @Override
-//    public User updateUser(User c) {
-//        return userRepository.save(c);
-//    }
-//
-//    @Override
-//    public User retrieveUser(Long id) {
-//        return userRepository.findById(id).orElse(null);
-//    }
-//
-//    @Override
-//    public List<User> retrieveAllUsers() {
-//        return (List<User>) userRepository.findAll();
-//    }
+    @Override
+    public User updateUser(@AuthenticationPrincipal UserDetails userDetails, User updatedUser, String currentPassword) {
+        String currentUsername = userDetails.getUsername();
+        User user = userRepository.findUserByUsername(currentUsername);
+        if (!encoder.matches(decode(currentPassword), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        user.setNom(updatedUser.getNom());
+        user.setPrenom(updatedUser.getPrenom());
+        user.setEmail(updatedUser.getEmail());
+        user.setAddress(updatedUser.getAddress());
+        user.setNumTel(user.getNumTel());
+        User savedUser = userRepository.save(user);
+        return savedUser;
+    }
 
-//    public User updateUser(int userId, User updatedUser) {
-//        User user = userRepository.findById_user(userId);
-//        user.setNom(updatedUser.getNom());
-//        user.setPrenom(updatedUser.getPrenom());
-//        user.setEmail(user.getEmail());
-//        user.setUsername(user.getUsername());
-//        user.setPassword(encoder.encode(updatedUser.getPassword()));
-//        user.setDateNaissance(updatedUser.getDateNaissance());
-//        User savedUser = userRepository.save(user);
-//        return savedUser;
-//    }
 
-//@Override
-//    public University adduni (University u) {
-//        return universREP.save(u);
-//    }
+
+    @Override
+    public User getMyProfile(UserDetails userDetails) {
+        String cuurentname = userDetails.getUsername();
+        User user = userRepository.findUserByUsername(cuurentname);
+        return user;
+    }
+
 
 
 }

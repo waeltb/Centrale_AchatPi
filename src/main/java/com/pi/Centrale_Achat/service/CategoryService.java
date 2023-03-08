@@ -11,7 +11,7 @@ public interface CategoryService {
 
     List<Category> show_All(UserDetails userDetails);
     Category saveCategorie(UserDetails userDetails,Category ca);
-    Category modifierCategorie(UserDetails userDetails,Category ca);
+    Category modifierCategorie(UserDetails userDetails,Category ca,int id);
     void delete(UserDetails userDetails,int idc);
 
 }

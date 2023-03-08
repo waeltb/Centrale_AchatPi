@@ -1,6 +1,7 @@
 package com.pi.Centrale_Achat.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,6 +40,7 @@ public class Product implements Serializable {
     @JsonIgnore
     @ManyToOne
     Category category;
+    @JsonIgnore
     @OneToMany(mappedBy = "product")
     List<MvStock> stocks;
     @JsonIgnore

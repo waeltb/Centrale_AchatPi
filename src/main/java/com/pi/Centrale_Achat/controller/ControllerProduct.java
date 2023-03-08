@@ -1,7 +1,6 @@
 package com.pi.Centrale_Achat.controller;
 
 
-import com.pi.Centrale_Achat.dto.DiscountDto;
 import com.pi.Centrale_Achat.entities.Product;
 
 import com.pi.Centrale_Achat.entities.User;
@@ -16,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -43,23 +44,30 @@ public class ControllerProduct {
 
 
     @GetMapping("/showAll")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity< List<Product>>showAll_Products(){
         List<Product> products=productService.show_AllProducts();
         return ResponseEntity.ok(products);
     }
     @GetMapping("/productsOfCategory/{idCategory}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+
     public ResponseEntity< List<Product>>show_ProductsOf_Category(@PathVariable int idCategory){
         List<Product> products=productService.show_ProductsOf_Category(idCategory);
         return ResponseEntity.ok(products);
     }
     @GetMapping("/userProducts")
-    public ResponseEntity< List<Product>>showUser_Products(@AuthenticationPrincipal UserDetails userDetails){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      String currentUserName=  authentication.getName();
+    @PreAuthorize("hasRole('SUPPLIER')")
+    public ResponseEntity<?>showUser_Products(@AuthenticationPrincipal UserDetails userDetails){
+        String currentUserName = userDetails.getUsername();
         User currentUser = userRepo.findUserByUsername(currentUserName);
-        List<Product> products=productService.show_User_Products( currentUser);
-        return ResponseEntity.ok(products);
+        if (currentUser == null) {
+            return new ResponseEntity<>(Collections.emptyList(),HttpStatus.NOT_FOUND) ;
+        } else {
+            return new ResponseEntity<>(productService.show_User_Products(userDetails),HttpStatus.OK) ;
+        }
     }
+
 
 
     @PostMapping("/ajouterProduit/{idCategory}")
@@ -80,20 +88,38 @@ public class ControllerProduct {
     }
 
 
-    @PostMapping("/modifier/{iduser}/{idP}")
-    public ResponseEntity<?> modifier(@RequestParam("name") String name, @RequestParam("price") float price,
+    @PutMapping("/modifier/{idP}")
+    @PreAuthorize("hasRole('SUPPLIER')")
+    public ResponseEntity<?> modifier(@AuthenticationPrincipal UserDetails userDetails,@RequestParam("name") String name, @RequestParam("price") float price,
                                       @RequestParam("description") String description, @RequestParam("minStock") int minStock,
-                                      @RequestParam("file") MultipartFile file, @PathVariable("iduser") int iduser, @PathVariable("idP") int idP) throws IOException {
-        productService.modifier(name, price,  description, minStock,  file, iduser,idP);
+                                      @RequestParam("file") MultipartFile file
+            , @PathVariable("idP") int idP) throws IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
+        User currentUser = userRepo.findUserByUsername(currentUserName);
+        if (currentUser==null) {
+            System.out.println("Vous devez se connecter");
+        }
+        productService.modifier(userDetails,name, price,  description, minStock,  file,idP);
 
         return new ResponseEntity<>("modifier avec success", HttpStatus.OK);
     }
-    @PostMapping("/updateQuantity/{idP}")
-    public ResponseEntity<?> updateQuantity(@RequestBody int qte,@PathVariable("idP") int idP){
-        productService.updateQuantity(qte,idP);
-        return new ResponseEntity<>("Quantity modifier avec success", HttpStatus.OK);
+    @PutMapping("/updateQuantity/{idP}")
+    public ResponseEntity<?> updateQuantity(@AuthenticationPrincipal UserDetails userDetails,@RequestBody int qte,@PathVariable("idP") int idP){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
+        User currentUser = userRepo.findUserByUsername(currentUserName);
+        if (currentUser==null) {
+            System.out.println("Vous devez se connecter");
+        }
+        productService.updateQuantity(userDetails,qte,idP);
+
+        return new ResponseEntity<>("modifier avec success", HttpStatus.OK);
     }
+
     @GetMapping(path="/findByIdImage/{id}" ,produces = MediaType.IMAGE_JPEG_VALUE)
+    @PreAuthorize("hasRole('CUSTOMER')")
     public  ResponseEntity<byte[]>  findByIdImage(@PathVariable(name ="id") Integer id) throws IOException {
 
         return ResponseEntity
@@ -102,27 +128,20 @@ public class ControllerProduct {
                 .body(productService.findByIdImage(id));
     }
 
-    @DeleteMapping("/{idP}")
-    public ResponseEntity<?> delete(@PathVariable int idP){
-        productService.delete(idP);
-        return new ResponseEntity<>("produit supprimer avec success", HttpStatus.OK);
-    }
-
-    @PostMapping("/applyDiscount/{idProduct}")
-    public ResponseEntity<?> apply_discount(@PathVariable int idProduct,@RequestBody DiscountDto discountDto){
-        productService.apply_discount(idProduct,discountDto);
-        return ResponseEntity.ok("discount avec success");
-    }
-
-    @PostMapping("/provideTender/{idTender}")
-    public ResponseEntity<?> provide_Tender(@AuthenticationPrincipal UserDetails userDetails ,@RequestParam String name,@RequestParam float price, @RequestParam int qte
-            ,@RequestParam String description,@RequestParam int minStock,@RequestParam int idCategory, @RequestParam MultipartFile file,@PathVariable int idTender)throws IOException {
-        productService.provide_Tender(userDetails,name, price, qte, description, minStock, idCategory, file,idTender);
-        return ResponseEntity.ok("produit fournit avec success");
-    }
-
-
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<?> delete(@AuthenticationPrincipal UserDetails userDetails,@PathVariable("id")int idP){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Product product = productRepo.findById(idP).orElse(null);
+        if (product != null && (currentUsername.equals(product.getUser().getUsername()))) {
+            productService.delete(userDetails,idP);
+            return new ResponseEntity<>("produit supprimer avec success", HttpStatus.OK);
+        } else {
+            throw new AccessDeniedException("You are not authorized to delete this order");
+        }
 
     }
+
+}
 
 

@@ -39,7 +39,7 @@ public class ControllerBill {
     }
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("add/{id}")
-    public Bill addFacture(@AuthenticationPrincipal UserDetails userDetails,@RequestBody Bill b , @PathVariable("id")int id){
+    public Bill add(@AuthenticationPrincipal UserDetails userDetails,@RequestBody Bill b , @PathVariable("id")int id){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
         User currentUser = userRepo.findUserByUsername(currentUserName);
@@ -49,19 +49,8 @@ public class ControllerBill {
         return billService.addFacture(userDetails,b, id);
 
     }
-    @PreAuthorize("hasRole('CUSTOMER')")
-    @PostMapping("add/{id}/{code}")
-    public Bill addFacturePromo(@AuthenticationPrincipal UserDetails userDetails,@RequestBody Bill b ,
-                                @PathVariable("id")int id,@PathVariable("code")String code)  {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName = authentication.getName();
-        User currentUser = userRepo.findUserByUsername(currentUserName);
-        if (currentUser==null) {
-            System.out.println("Vous devez se connecter");
-        }
-        return billService.addFactureWithCodePromo(userDetails, b,id,code);
 
-    }
+
 
 
 }
