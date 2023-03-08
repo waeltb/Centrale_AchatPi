@@ -6,7 +6,6 @@ import com.pi.Centrale_Achat.repositories.UserRepo;
 import com.pi.Centrale_Achat.serviceImpl.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -33,7 +32,7 @@ public class ControllerOrder {
 
     @PostMapping("/add/{idP}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public Order add22(@AuthenticationPrincipal UserDetails userDetails, @RequestBody Order o, @PathVariable("idP") int idP) {
+    public Order addOrder(@AuthenticationPrincipal UserDetails userDetails, @RequestBody Order o, @PathVariable("idP") int idP) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
         User currentUser = userRepo.findUserByUsername(currentUserName);
@@ -45,14 +44,9 @@ public class ControllerOrder {
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public void delete(@AuthenticationPrincipal UserDetails userDetails,@PathVariable("id") int id) {
-        // Get the current user's username
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-
-        // Get the order by id
         Order order = orderRepo.findById(id).orElse(null);
-
-        // Check if the current user is authorized to delete the order
         if (order != null && (currentUsername.equals(order.getUser().getUsername()))) {
             orderService.delete(userDetails,id);
         } else {
@@ -77,7 +71,6 @@ public class ControllerOrder {
         String currentUserName = userDetails.getUsername();
         User currentUser = userRepo.findUserByUsername(currentUserName);
         if (currentUser == null) {
-            // Handle error case where user is not found
             return Collections.emptyList();
         } else {
             return orderService.getOrdersForUser(currentUser);
