@@ -128,7 +128,7 @@ public class BillServiceImpl implements BillService {
             sb.append(randomChar);
         }
         String code = sb.toString();
-        System.out.println(code);
+      //  System.out.println(code);
         return code;
     }
     public float calculFactureAvecCodePromo(int id)  {
