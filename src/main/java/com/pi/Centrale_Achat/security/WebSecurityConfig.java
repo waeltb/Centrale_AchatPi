@@ -76,6 +76,18 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
 
 
+                .antMatchers("/api/tender/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString(),ERole.ROLE_OPERATOR.toString())
+                .antMatchers("/api/OperatorScore/**").permitAll()
+                .antMatchers("/api/comment/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString())
+
+
+
+
+
+
+                .antMatchers("/api/delivery/**").hasAnyAuthority(ERole.ROLE_CUSTOMER.toString(),ERole.ROLE_DELIVERY.toString())
+
+
 
                 .anyRequest().authenticated();
 
