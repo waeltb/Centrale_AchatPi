@@ -35,6 +35,7 @@ public class User implements Serializable {
     String address;
     String image;
     String numTel;
+    Float score;
     private String resetpasswordcode;
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
@@ -56,6 +57,9 @@ public class User implements Serializable {
     List<RequestClaim>requestClaims;
     @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
     List<OperatorScore>operatorScores;
+    @OneToMany(mappedBy = "userComment",cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
+    @JsonIgnore
+    List<Comment>comments;
     public User(String nom,String prenom,String username,String email,String password,Date dateNaissance){
         this.nom = nom;
         this.prenom =prenom ;

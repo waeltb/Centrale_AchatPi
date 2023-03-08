@@ -1,7 +1,7 @@
 package com.pi.Centrale_Achat.controller;
 
 import com.pi.Centrale_Achat.entities.Category;
-<
+
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.CategoryRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
@@ -76,7 +76,7 @@ public class ControllerCategory {
         }
         List<Category>categories = categoryRepo.findAll();
         for (Category category : categories){
-            if (!(currentUser.getId()==category.getId())){
+            if (!(currentUser.getId()==category.getUser().getId())){
                 return new ResponseEntity<>("erreur", HttpStatus.FORBIDDEN);
             }
             else {
