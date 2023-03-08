@@ -35,7 +35,12 @@ public class User implements Serializable {
     String address;
     String image;
     String numTel;
+
+    boolean enabled = true;
+    int numberOfAlerts = 0;
+
     Float score;
+
     private String resetpasswordcode;
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
