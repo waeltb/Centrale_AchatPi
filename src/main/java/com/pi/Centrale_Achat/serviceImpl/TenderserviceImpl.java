@@ -114,6 +114,11 @@ public Tender updateTender(@AuthenticationPrincipal UserDetails userDetails,Tend
         if (c.getUser().getId()==user1.getId()){
             if(c.getId()==idtender){
             c.setName(ta.getName());
+            c.setDescription(ta.getDescription());
+                c.setBrand(ta.getBrand());
+                c.setQuantity(ta.getQuantity());
+
+
             tender = c;
             tenderRepository.save(c);
 
@@ -129,7 +134,7 @@ public Tender updateTender(@AuthenticationPrincipal UserDetails userDetails,Tend
 
     @Override
     public List<Tender> filterTenders(String name, String description, String brand) {
-
+/*
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tender> query = cb.createQuery(Tender.class);
@@ -139,7 +144,7 @@ public Tender updateTender(@AuthenticationPrincipal UserDetails userDetails,Tend
         List<Predicate> predicates = new ArrayList<>();
         if (StringUtils.isNotBlank(name)) {
             predicates.add((Predicate) cb.or(
-                    cb.like(root.get("name"), "%" + name + "%"),
+                    cb.like(root.get("name"),   name),
                     cb.like(root.get("description"), "%" + name + "%")
             ));
         }
@@ -156,7 +161,14 @@ public Tender updateTender(@AuthenticationPrincipal UserDetails userDetails,Tend
         }
 
         TypedQuery<Tender> typedQuery = entityManager.createQuery(query);
-        return typedQuery.getResultList();
+        return typedQuery.getResultList();*/
+       // log.info(name);
+        List<Tender> tenders = new ArrayList<>();
+        tenderRepository.findAll().forEach(tender -> {
+            if(tender.getName().trim().equalsIgnoreCase(name) || tender.getDescription().trim().equalsIgnoreCase(description) || tender.getBrand().trim().equalsIgnoreCase(brand))
+                tenders.add(tender);
+        });
+        return tenders;
     }
 
     @Override
