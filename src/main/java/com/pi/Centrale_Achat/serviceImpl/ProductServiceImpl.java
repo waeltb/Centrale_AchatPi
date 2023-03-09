@@ -1,5 +1,6 @@
 package com.pi.Centrale_Achat.serviceImpl;
 
+import com.pi.Centrale_Achat.dto.DiscountDto;
 import com.pi.Centrale_Achat.entities.*;
 import com.pi.Centrale_Achat.repositories.*;
 import com.pi.Centrale_Achat.service.ProductService;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -36,6 +39,8 @@ public class ProductServiceImpl implements ProductService {
     private final StockRepo mvStockRepo;
     private final OrderRepo orderRepo;
     private final CategoryRepo categoryRepo;
+
+    private final SmsService smsService;
 
 //    @Autowired
 //    private AlertService alertService;
@@ -161,4 +166,104 @@ public class ProductServiceImpl implements ProductService {
 
 
     }
+    public Product apply_discount(@AuthenticationPrincipal UserDetails userDetails,int idProduct, DiscountDto discountDto) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
+        Product product = productRepo.findById(idProduct).get();
+        if(product.getUser().getId()==user1.getId()) {
+            product.setStartDateDiscount(discountDto.getStartDateDiscount());
+            product.setEndDateDiscount(discountDto.getEndDateDiscount());
+            Float calculDiscount = (product.getPrice() * discountDto.getTauxDiscount() / 100);
+            product.setDiscount(calculDiscount);
+            productRepo.save(product);
+        }
+        return product;
+    }
+
+    @Scheduled(fixedDelay = 1000)//
+    public void discount() {
+        Date currentDate = new Date();
+        List<Product> products = productRepo.findAll();
+        for (Product p : products) {
+
+
+            if (p.getStartDateDiscount() != null) {
+               float prixInitial= p.getPrice();
+
+                if (currentDate.after(p.getStartDateDiscount()) && currentDate.before(p.getEndDateDiscount())) {
+
+                    Float nouveauprix=(prixInitial *p.getDiscount())/100;
+                    p.setPrice(nouveauprix);
+                    p.setDiscount(0);
+                    productRepo.save(p);
+                    System.out.println("product in remise" + p.getName());
+                } else {
+
+                    p.setStartDateDiscount(null);
+                    p.setEndDateDiscount(null);
+                    prixInitial = p.getPrice() +p.getDiscount();
+                    p.setPrice(prixInitial);
+
+                    productRepo.save(p);
+                    System.out.println(" produit " + p.getName() + " end date remise ");
+                }
+
+            }
+
+
+        }
+
+    }
+
+    @Scheduled(fixedDelay = 1000)//
+    public void notifier_Furnisseur(){
+        List<Product> products = productRepo.findAll();
+        for (Product p : products) {
+            if (p.getQte() <p.getMinStock()){
+                String recipient_fournisseur=p.getUser().getNumTel();
+                String message = String.format("Alert: Product %s has reached the minimum quantity of %d", p.getName(), p.getQte());
+                smsService.sendSMS(recipient_fournisseur,message);
+                System.out.println();
+
+            }
+
+        }
+
+    }
+
+    public void provide_Tender(@AuthenticationPrincipal UserDetails userDetails , String name, float price, int qte, String description, int minStock, MultipartFile file, int idTender)throws IOException{
+        String currentUserName = userDetails.getUsername();
+        User currentUser = userRepo.findUserByUsername(currentUserName);
+        Tender tender= tenderRepo.findById(idTender).get();
+
+        Product product=new Product();
+        product.setImage(file.getOriginalFilename());
+        Files.copy(file.getInputStream(), Paths.get("src/main/resources/imageProduct/" + file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
+        product.setDescription(description);
+        product.setName(name);
+        product.setPrice(price);
+        product.setMinStock(minStock);
+
+
+        product.setQte(qte);
+        product.setUser(currentUser);
+
+        product.setTender(tender);
+        productRepo.save(product);
+        MvStock mvStk = new MvStock();
+        mvStk.setProduct(product);
+        mvStk.setDateMvt(new Date());
+        mvStk.setTypeMvt(TypeMvStock.entree);
+        mvStk.setQuantiteMvt(qte);
+       mvStockRepo.save(mvStk);
+        String responsableTenderName=tender.getUser().getUsername();
+        String responsableTenderPhone=tender.getUser().getNumTel();
+        String message = "Salut Mr  "+responsableTenderName+" votre demande tender "+ tender.getName()+" est reussi consulter l'application pour plus details ";
+        smsService.sendSMS(responsableTenderPhone,message);
+       System.out.println("produit ajouter avec success ");
+
+    }
+
+
+
 }

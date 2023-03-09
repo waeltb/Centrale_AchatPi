@@ -60,7 +60,6 @@ private final    AuthenticationManager authenticationManager;
 
     private final     JavaMailSender javaMailSender;
 
-    private final    UserServiceImpl userService;
 
 
     private final UserDetailsService userDetailsService;
@@ -114,7 +113,12 @@ private final    AuthenticationManager authenticationManager;
                     Role operateurrole = roleRepository.findByName(ERole.ROLE_OPERATOR)
                             .orElseGet(() -> roleRepository.save(new Role(ERole.ROLE_OPERATOR)));
                     roles.add(operateurrole);
-                } else if (ERole.ROLE_CUSTOMER.name().equals(roleName)) {
+
+                } if (ERole.ROLE_ADMIN.name().equals(roleName)) {
+                    Role admin = roleRepository.findByName(ERole.ROLE_ADMIN)
+                            .orElseGet(() -> roleRepository.save(new Role(ERole.ROLE_ADMIN)));
+                    roles.add(admin);}
+                else if (ERole.ROLE_CUSTOMER.name().equals(roleName)) {
                     Role clientrole = roleRepository.findByName(ERole.ROLE_CUSTOMER)
                             .orElseGet(() -> roleRepository.save(new Role(ERole.ROLE_CUSTOMER)));
                     roles.add(clientrole);

@@ -66,9 +66,13 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests().antMatchers("/api/auth/**").permitAll()
                 .antMatchers("/api/test/**").hasAnyAuthority(ERole.ROLE_OPERATOR.toString())
-                .antMatchers("/api/product/**").hasAnyAuthority(ERole.ROLE_SUPPLIER.toString(),ERole.ROLE_CUSTOMER.toString())
+                .antMatchers("/api/product/**").hasAnyAuthority(ERole.ROLE_SUPPLIER.toString(),ERole.ROLE_CUSTOMER.toString(),ERole.ROLE_OPERATOR.toString())
                 .antMatchers("/api/category/**").hasAnyAuthority(ERole.ROLE_SUPPLIER.toString())
                 .antMatchers(" /api/user/**").permitAll()
+                .antMatchers("/api/admin/**").hasAnyAuthority(ERole.ROLE_ADMIN.toString())
+
+
+
                 .anyRequest().authenticated();
 
         http.headers().frameOptions().sameOrigin();

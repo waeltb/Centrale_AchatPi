@@ -1,7 +1,9 @@
 package com.pi.Centrale_Achat.service;
 
+import com.pi.Centrale_Achat.dto.DiscountDto;
 import com.pi.Centrale_Achat.entities.*;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,5 +27,11 @@ public interface ProductService {
     Product updateQuantity(UserDetails userDetailsint ,int qte,int idP);
     byte[] findByIdImage(int idP) throws IOException ;
     void delete(UserDetails userDetails,int idP);
+    Product apply_discount(UserDetails userDetails, int idProduct, DiscountDto discountDto);
+
+
+
+
+
 
 }

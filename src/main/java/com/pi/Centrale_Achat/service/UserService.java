@@ -13,4 +13,6 @@ public interface UserService {
 
      User getMyProfile(UserDetails userDetails);
 
+     List <User> getAllUsers();
+
 }

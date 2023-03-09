@@ -32,6 +32,7 @@ public class Product implements Serializable {
     @Temporal(TemporalType.DATE)
     Date endDateDiscount;
     private float discount;
+
     private int rating;
     private int numberOfRates = 0;
     @JsonIgnore

@@ -1,10 +1,13 @@
 package com.pi.Centrale_Achat.controller;
 
 
+import com.pi.Centrale_Achat.dto.DiscountDto;
 import com.pi.Centrale_Achat.entities.Product;
 
+import com.pi.Centrale_Achat.entities.Tender;
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.ProductRepo;
+import com.pi.Centrale_Achat.repositories.TenderRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
 
 import com.pi.Centrale_Achat.repositories.ProductRepo;
@@ -40,6 +43,7 @@ public class ControllerProduct {
 
 
     private final UserRepo userRepo;
+    private final TenderRepo tenderRepo;
 
 
 
@@ -104,8 +108,10 @@ public class ControllerProduct {
 
         return new ResponseEntity<>("modifier avec success", HttpStatus.OK);
     }
+
     @PutMapping("/updateQuantity/{idP}")
-    public ResponseEntity<?> updateQuantity(@AuthenticationPrincipal UserDetails userDetails,@RequestBody int qte,@PathVariable("idP") int idP){
+    @PreAuthorize("hasRole('SUPPLIER')or hasRole('OPERATOR')")
+    public ResponseEntity<?> updateQuantity(@AuthenticationPrincipal UserDetails userDetails,@RequestParam int qte,@PathVariable("idP") int idP){
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
@@ -127,7 +133,7 @@ public class ControllerProduct {
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(productService.findByIdImage(id));
     }
-
+    @PreAuthorize("hasRole('SUPPLIER')or hasRole('OPERATOR')")
     @DeleteMapping("delete/{id}")
     public ResponseEntity<?> delete(@AuthenticationPrincipal UserDetails userDetails,@PathVariable("id")int idP){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -139,6 +145,35 @@ public class ControllerProduct {
         } else {
             throw new AccessDeniedException("You are not authorized to delete this order");
         }
+
+    }
+
+    @PutMapping("/applyDiscount/{idProduct}")
+    @PreAuthorize("hasRole('SUPPLIER')")
+
+    public ResponseEntity<?> apply_discount(@AuthenticationPrincipal UserDetails userDetails ,@PathVariable int idProduct,@RequestBody DiscountDto discountDto){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Product product = productRepo.findById(idProduct).orElse(null);
+        if (product != null && (currentUsername.equals(product.getUser().getUsername()))) {
+            return new ResponseEntity<>( productService.apply_discount(userDetails,idProduct,discountDto), HttpStatus.OK);}
+     else
+    {
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
+    }}
+
+    @PostMapping("/provideTender/{idTender}")
+    @PreAuthorize("hasRole('OPERATOR')")
+    public ResponseEntity<?> provide_Tender(@AuthenticationPrincipal UserDetails userDetails ,@RequestParam String name,@RequestParam float price, @RequestParam int qte
+            ,@RequestParam String description,@RequestParam int minStock, @RequestParam MultipartFile file,@PathVariable int idTender)throws IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            productService.provide_Tender(userDetails,name, price, qte, description, minStock,  file,idTender);
+            return ResponseEntity.ok("tender ajouté avec success");
+
+
+
 
     }
 
