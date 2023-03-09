@@ -31,7 +31,6 @@ public class ControllerBill {
         String currentUserName = userDetails.getUsername();
         User currentUser = userRepo.findUserByUsername(currentUserName);
         if (currentUser == null) {
-            // Handle error case where user is not found
             return Collections.emptyList();
         } else {
             return billService.getBillsForUser(userDetails);

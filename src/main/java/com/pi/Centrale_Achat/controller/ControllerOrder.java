@@ -54,10 +54,20 @@ public class ControllerOrder {
         }
     }
 
-    @GetMapping("/count/{d1}/{d2}")
-    public int countCmd(@PathVariable("d1") @DateTimeFormat(pattern = "yyyy-MM-dd") Date d1,
+        @GetMapping("/count/{d1}/{d2}")
+        @PreAuthorize("hasRole('CUSTOMER')")
+    public int countCmd(@AuthenticationPrincipal UserDetails userDetails,@PathVariable("d1") @DateTimeFormat(pattern = "yyyy-MM-dd") Date d1,
                         @PathVariable("d2") @DateTimeFormat(pattern = "yyyy-MM-dd") Date d2) {
-        return orderService.countCmdBetweenToDate(d1, d2);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        int a = 0;
+        List<Order>orderList=orderRepo.findAll();
+        for (Order o : orderList){
+            if (currentUsername.equals(o.getUser().getUsername())){
+                a=  orderService.countCmdBetweenToDate(userDetails,d1, d2);
+            }
+        }
+        return a;
     }
     @GetMapping("/get/{d}")
     public Order getOrderByDate(@PathVariable("d") @DateTimeFormat(pattern = "yyyy-MM-dd") Date d) {
