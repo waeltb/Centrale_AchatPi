@@ -12,6 +12,6 @@ public interface OrderService {
     void delete(UserDetails userDetails,int id);
     List<Order> getOrdersForUser(User user);
 
-    int countCmdBetweenToDate(Date date1,Date date2);
+    int countCmdBetweenToDate(UserDetails userDetails,Date date1,Date date2);
     Order findOrderByDate(Date d);
 }

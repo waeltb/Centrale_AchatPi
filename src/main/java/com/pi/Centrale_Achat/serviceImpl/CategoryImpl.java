@@ -43,16 +43,28 @@ public class CategoryImpl implements CategoryService {
 
     @Override
 
-    public Category modifierCategorie(@AuthenticationPrincipal UserDetails userDetails, Category ca, int id) {
-        Category cat = categoryRepo.findById(id).orElse(null);
+    public Category modifierCategorie(@AuthenticationPrincipal UserDetails userDetails, Category ca) {
         String currentUser = userDetails.getUsername();
         User user1 = userRepo.findUserByUsername(currentUser);
+        List<Category>categories = categoryRepo.findAll();
         Category category = new Category();
-        if (cat.getUser().getId()==user1.getId()){
-            cat.setNameCategory(ca.getNameCategory());
-        categoryRepo.save(cat);
-        }
-        return cat;
+for (Category c : categories){
+    if (c.getUser().getId()==user1.getId()){
+        c.setNameCategory(ca.getNameCategory());
+        category = c;
+        categoryRepo.save(c);
+
+    }
+}
+//        int iduser = ca.getUser().getId();
+//        if (!(user1.getId()==iduser)) {
+//            System.out.println("erreur");
+//        }
+//        ca.setNameCategory(ca.getNameCategory());
+//        categoryRepo.save(ca);
+//
+//        return ca ;
+        return category;
     }
 
     @Override

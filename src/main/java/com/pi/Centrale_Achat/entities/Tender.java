@@ -1,5 +1,6 @@
 package com.pi.Centrale_Achat.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,10 +26,13 @@ public class Tender implements Serializable {
     String image;
     String brand;
     Date dateTender;
+
     @ManyToOne
     User user;
+
     @OneToMany(mappedBy = "tender",cascade = {CascadeType.PERSIST})
     List<Comment>comments;
+
     @OneToMany(mappedBy = "tender",cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
     List<Product>products;
 }

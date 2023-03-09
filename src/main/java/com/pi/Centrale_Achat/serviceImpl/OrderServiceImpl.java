@@ -68,9 +68,18 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    @Override
-    public int countCmdBetweenToDate(Date date1, Date date2) {
-        return orederRepo.countOrdersByDatCmdBetween(date1,date2);
+        @Override
+    public int countCmdBetweenToDate(@AuthenticationPrincipal UserDetails userDetails,Date date1, Date date2) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
+        int nbrCmd=0;
+        List<Order>orders = orederRepo.findAll();
+        for (Order o : orders){
+            if (o.getUser().getId()==user1.getId()){
+                nbrCmd= orederRepo.countOrdersByDatCmdBetween(date1,date2);
+            }
+        }
+        return nbrCmd;
     }
     @Override
     public Order findOrderByDate(Date d) {
