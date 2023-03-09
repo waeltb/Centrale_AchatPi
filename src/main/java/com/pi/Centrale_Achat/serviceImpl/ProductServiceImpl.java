@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,28 +40,30 @@ public class ProductServiceImpl implements ProductService {
     private final OrderRepo orderRepo;
     private final CategoryRepo categoryRepo;
 
-   @Autowired
-    private SmsService smsService;
+    private final SmsService smsService;
 
+//    @Autowired
+//    private AlertService alertService;
+//    @Autowired
+//    private NotifierClient notifierClient;
 
     @Autowired
     private TenderRepo tenderRepo;
-
     @Override
     public List<Product> show_AllProducts() {
+
         return productRepo.findAll();
     }
-
     @Override
     public List<Product> show_ProductsOf_Category(int idCategory) {
         Category category = categoryRepo.findById(idCategory).get();
         return category.getProducts();
     }
-
     @Override
-    public List<Product> show_User_Products(User curentUser) {
-
-        return curentUser.getProducts();
+    public List<Product> show_User_Products(@AuthenticationPrincipal UserDetails userDetails) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
+        return productRepo.findByUser(user1);
     }
 
     @Override
@@ -89,42 +92,48 @@ public class ProductServiceImpl implements ProductService {
         mvStk.setQuantiteMvt(qte);
         mvStockRepo.save(mvStk);
 
-        return p;
-    }
+        return p;      }
 
 
     @Override
-    public Product modifier(String name, float price, String description, int minStock, MultipartFile file, int idUser, int idP) throws IOException {
-
+    public Product modifier(@AuthenticationPrincipal UserDetails userDetails,String name,
+                            float price, String description, int minStock, MultipartFile file, int idP) throws IOException {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
         Product p = productRepo.findById(idP).orElse(null);
-        Files.copy(file.getInputStream(), Paths.get("src/main/resources/imageProduct/" + file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
-        p.setName(name);
-        p.setDescription(description);
-        p.setPrice(price);
-        p.setMinStock(minStock);
-        p.setImage(file.getOriginalFilename());
-        p.setUser(userRepo.findById(idUser).orElse(null));
-        productRepo.save(p);
+        if (p.getUser().getId()==user1.getId()){
+            Files.copy(file.getInputStream(), Paths.get("src/main/resources/imageProduct/" + file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
+            p.setName(name);
+            p.setDescription(description);
+            p.setPrice(price);
+            p.setMinStock(minStock);
+            p.setImage(file.getOriginalFilename());
+            productRepo.save(p);
+        }
+
 
 
         return p;
 
     }
-
     @Override
-    public Product updateQuantity(int qte, int idP) {
+    public Product updateQuantity(@AuthenticationPrincipal UserDetails userDetails,int qte, int idP) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
         Product p = productRepo.findById(idP).orElse(null);
-        p.setQte(qte);
-        productRepo.save(p);
-        MvStock mvStock = new MvStock();
-        mvStock.setProduct(p);
-        mvStock.setQuantiteMvt(qte);
-        mvStock.setTypeMvt(TypeMvStock.entree);
-        mvStock.setDateMvt(new Date());
-        mvStockRepo.save(mvStock);
+        if (p.getUser().getId()==user1.getId()){
+            p.setQte(qte);
+            productRepo.save(p);
+            MvStock mvStock = new MvStock();
+            mvStock.setProduct(p);
+            mvStock.setQuantiteMvt(qte);
+            mvStock.setTypeMvt(TypeMvStock.entree);
+            mvStock.setDateMvt(new Date());
+            mvStockRepo.save(mvStock);
+        }
+
         return p;
     }
-
     @Override
     public byte[] findByIdImage(int idP) throws IOException {
 
@@ -143,43 +152,57 @@ public class ProductServiceImpl implements ProductService {
         byte[] bytes = StreamUtils.copyToByteArray(inputStream);
         return bytes;
     }
-
     @Override
-    public void delete(int idP) {
-        productRepo.deleteById(idP);
+    public void delete(@AuthenticationPrincipal UserDetails userDetails,int idP) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
+        Product product = productRepo.findById(idP).orElse(null);
+        if(product.getUser().getId()==user1.getId()){
+            productRepo.deleteById(idP);
+        }
+        else {
+            System.out.println("erreur");
+        }
+
+
     }
-
-
-    public Product apply_discount(int idProduct, DiscountDto discountDto) {
+    public Product apply_discount(@AuthenticationPrincipal UserDetails userDetails,int idProduct, DiscountDto discountDto) {
+        String currentUser = userDetails.getUsername();
+        User user1 = userRepo.findUserByUsername(currentUser);
         Product product = productRepo.findById(idProduct).get();
-        product.setStartDateDiscount(discountDto.getStartDateDiscount());
-        product.setEndDateDiscount(discountDto.getEndDateDiscount());
-        Float calculDiscount = (product.getPrice() * discountDto.getTauxDiscount() / 100);
-        product.setDiscount(calculDiscount);
-        productRepo.save(product);
+        if(product.getUser().getId()==user1.getId()) {
+            product.setStartDateDiscount(discountDto.getStartDateDiscount());
+            product.setEndDateDiscount(discountDto.getEndDateDiscount());
+            Float calculDiscount = (product.getPrice() * discountDto.getTauxDiscount() / 100);
+            product.setDiscount(calculDiscount);
+            productRepo.save(product);
+        }
         return product;
     }
 
-    // This method will be triggered every day at midnight
-    //@Scheduled(cron = "0 0 0 * * *")
-    @Scheduled(fixedDelay = 60000)// execute chaque second
+    @Scheduled(fixedDelay = 1000)//
     public void discount() {
         Date currentDate = new Date();
         List<Product> products = productRepo.findAll();
         for (Product p : products) {
+
+
             if (p.getStartDateDiscount() != null) {
+               float prixInitial= p.getPrice();
+
                 if (currentDate.after(p.getStartDateDiscount()) && currentDate.before(p.getEndDateDiscount())) {
-                    Float nouveauPrix = p.getPrice() - p.getDiscount();
-                    p.setPrice(nouveauPrix);
+
+                    Float nouveauprix=(prixInitial *p.getDiscount())/100;
+                    p.setPrice(nouveauprix);
                     p.setDiscount(0);
                     productRepo.save(p);
                     System.out.println("product in remise" + p.getName());
                 } else {
+
                     p.setStartDateDiscount(null);
                     p.setEndDateDiscount(null);
-                    Float prixInitial = p.getPrice() + p.getDiscount();
+                    prixInitial = p.getPrice() +p.getDiscount();
                     p.setPrice(prixInitial);
-                    p.setDiscount(0);
 
                     productRepo.save(p);
                     System.out.println(" produit " + p.getName() + " end date remise ");
@@ -192,7 +215,7 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-    @Scheduled(fixedDelay = 10800000)// execute chaque 3 heurs
+    @Scheduled(fixedDelay = 1000)//
     public void notifier_Furnisseur(){
         List<Product> products = productRepo.findAll();
         for (Product p : products) {
@@ -200,6 +223,7 @@ public class ProductServiceImpl implements ProductService {
                 String recipient_fournisseur=p.getUser().getNumTel();
                 String message = String.format("Alert: Product %s has reached the minimum quantity of %d", p.getName(), p.getQte());
                 smsService.sendSMS(recipient_fournisseur,message);
+                System.out.println();
 
             }
 
@@ -207,11 +231,11 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-    public void provide_Tender(@AuthenticationPrincipal UserDetails userDetails , String name, float price, int qte, String description, int minStock, int idCategory, MultipartFile file,int idTender)throws IOException{
+    public void provide_Tender(@AuthenticationPrincipal UserDetails userDetails , String name, float price, int qte, String description, int minStock, MultipartFile file, int idTender)throws IOException{
         String currentUserName = userDetails.getUsername();
         User currentUser = userRepo.findUserByUsername(currentUserName);
         Tender tender= tenderRepo.findById(idTender).get();
-       Category category= categoryRepo.findById(idCategory).orElse(null);
+
         Product product=new Product();
         product.setImage(file.getOriginalFilename());
         Files.copy(file.getInputStream(), Paths.get("src/main/resources/imageProduct/" + file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
@@ -220,7 +244,7 @@ public class ProductServiceImpl implements ProductService {
         product.setPrice(price);
         product.setMinStock(minStock);
 
-        product.setCategory(category);
+
         product.setQte(qte);
         product.setUser(currentUser);
 
@@ -231,12 +255,15 @@ public class ProductServiceImpl implements ProductService {
         mvStk.setDateMvt(new Date());
         mvStk.setTypeMvt(TypeMvStock.entree);
         mvStk.setQuantiteMvt(qte);
-        mvStockRepo.save(mvStk);
+       mvStockRepo.save(mvStk);
         String responsableTenderName=tender.getUser().getUsername();
         String responsableTenderPhone=tender.getUser().getNumTel();
         String message = "Salut Mr  "+responsableTenderName+" votre demande tender "+ tender.getName()+" est reussi consulter l'application pour plus details ";
-         smsService.sendSMS(responsableTenderPhone,message);
-
+        smsService.sendSMS(responsableTenderPhone,message);
+       System.out.println("produit ajouter avec success ");
 
     }
+
+
+
 }

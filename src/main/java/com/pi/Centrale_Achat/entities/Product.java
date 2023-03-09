@@ -1,6 +1,7 @@
 package com.pi.Centrale_Achat.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class Product implements Serializable {
     @Temporal(TemporalType.DATE)
     Date endDateDiscount;
     private float discount;
+
     private int rating;
     private int numberOfRates = 0;
     boolean accepted;
@@ -40,6 +42,7 @@ public class Product implements Serializable {
     @JsonIgnore
     @ManyToOne
     Category category;
+    @JsonIgnore
     @OneToMany(mappedBy = "product")
     List<MvStock> stocks;
     @JsonIgnore

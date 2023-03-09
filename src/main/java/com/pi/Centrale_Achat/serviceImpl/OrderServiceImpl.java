@@ -28,21 +28,18 @@ public class OrderServiceImpl implements OrderService {
         User user1 = userRepo.findUserByUsername(currentUser);
         Product p = productRepo.findById(idP).orElse(null);
         if (order.getProducts() == null) {
-            assert p != null;
             if (p.getQte() > order.getQte()) {
                 p.setQte(p.getQte() - order.getQte());
                 productRepo.save(p);
                 List<Product> products = new ArrayList<>();
                 products.add(p);
                 order.setProducts(products);
-                order.setCode(UUID.randomUUID().toString());
                 order.setUser(user1);
                 orederRepo.save(order);
             } else {
                 System.out.println("invalid qte");
             }
         } else {
-            assert p != null;
             if (p.getQte() > order.getQte()) {
                 p.setQte(p.getQte() - order.getQte());
                 order.getProducts().add(p);

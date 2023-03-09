@@ -14,6 +14,7 @@ import com.pi.Centrale_Achat.repositories.UserRepo;
 import com.pi.Centrale_Achat.security.jwt.JwtUtils;
 import com.pi.Centrale_Achat.serviceImpl.UserDetailsImpl;
 import com.pi.Centrale_Achat.serviceImpl.UserServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,47 +22,49 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    AuthenticationManager authenticationManager;
 
-    @Autowired
-    UserRepo userRepository;
+private final    AuthenticationManager authenticationManager;
 
-    @Autowired
-    RoleeRepo roleRepository;
+    private final    UserRepo userRepository;
 
-    @Autowired
-    PasswordEncoder encoder;
+    private final    RoleeRepo roleRepository;
 
-    @Autowired
-    JwtUtils jwtUtils;
+    private final    PasswordEncoder encoder;
 
-    @Autowired
-    private JavaMailSender javaMailSender;
-    @Autowired
+    private final    JwtUtils jwtUtils;
 
-    UserServiceImpl userService;
+    private final     JavaMailSender javaMailSender;
 
+
+
+    private final UserDetailsService userDetailsService;
+
+    private final Map<String, Integer> loginAttempts = new HashMap<>();
 
 
 
@@ -84,7 +87,6 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        // Create new user's account
         User user = null;
         try {
             user = new User(signUpRequest.getNom(), signUpRequest.getPrenom(), signUpRequest.getUsername(),
@@ -95,7 +97,6 @@ public class AuthController {
             e.printStackTrace();
         }
 
-        // Génération du code de vérification
         String verificationCode = UUID.randomUUID().toString();
 
         Set<String> strRoles = signUpRequest.getRole();
@@ -112,7 +113,12 @@ public class AuthController {
                     Role operateurrole = roleRepository.findByName(ERole.ROLE_OPERATOR)
                             .orElseGet(() -> roleRepository.save(new Role(ERole.ROLE_OPERATOR)));
                     roles.add(operateurrole);
-                } else if (ERole.ROLE_CUSTOMER.name().equals(roleName)) {
+
+                } if (ERole.ROLE_ADMIN.name().equals(roleName)) {
+                    Role admin = roleRepository.findByName(ERole.ROLE_ADMIN)
+                            .orElseGet(() -> roleRepository.save(new Role(ERole.ROLE_ADMIN)));
+                    roles.add(admin);}
+                else if (ERole.ROLE_CUSTOMER.name().equals(roleName)) {
                     Role clientrole = roleRepository.findByName(ERole.ROLE_CUSTOMER)
                             .orElseGet(() -> roleRepository.save(new Role(ERole.ROLE_CUSTOMER)));
                     roles.add(clientrole);
@@ -135,7 +141,6 @@ public class AuthController {
 
         userRepository.save(user);
 
-        // Envoi du mail de confirmation avec le code de vérification
         String appUrl = request.getScheme() + "://" + request.getServerName();
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(signUpRequest.getEmail());
@@ -146,22 +151,6 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("Un email de confirmation vous a été envoyé à l'adresse " + signUpRequest.getEmail() + ". Veuillez suivre les instructions pour vérifier votre compte."));
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -190,16 +179,62 @@ public class AuthController {
     ////////////
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> signin(@Valid @RequestBody LoginRequest loginRequest) throws MessagingException {
+        String username = loginRequest.getUsername();
+        Integer attempts = loginAttempts.getOrDefault(username, 0);
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        if (attempts >= 3) {
+            User user = userRepository.findUserByUsername(username);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Too many failed login attempts!"));
+            }
+            String email = user.getEmail();
+            if (StringUtils.isEmpty(email)) {
+                System.out.println("Alert: Too many failed login attempts for user " + username + ", but no email address available to send alert to.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Too many failed login attempts!"));
+            }
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setTo(email);
+            mailMessage.setSubject("Tentatives de connexion infructueuses");
+            mailMessage.setText("Nous avons détecté plusieurs tentatives de connexion infructueuses sur votre compte. Veuillez vérifier que votre mot de passe est sécurisé et que personne d'autre n'a accès à votre compte.");
+            javaMailSender.send(mailMessage);
+            System.out.println("Alert: Too many failed login attempts for user " + username);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Too many failed login attempts! Please check your email for further instructions."));
+        }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        } catch (BadCredentialsException e) {
+            loginAttempts.put(username, attempts + 1);
+            if (attempts + 1 >= 3) {
+                User user = userRepository.findUserByUsername(username);
+                String verificationCode = UUID.randomUUID().toString();
 
+                user.setVerificationCode(verificationCode);
+                user.setVerified(false);
+                userRepository.save(user);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
+                if (user == null) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid username or password!"));
+                }
+                String email = user.getEmail();
+                if (StringUtils.isEmpty(email)) {
+                    System.out.println("Alert: Too many failed login attempts for user " + username + ", but no email address available to send alert to.");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Too many failed login attempts!"));
+                }
+                SimpleMailMessage mailMessage = new SimpleMailMessage();
+                mailMessage.setTo(email);
+                mailMessage.setSubject("Tentatives de connexion infructueuses");
+                mailMessage.setText("Nous avons détecté plusieurs tentatives de connexion infructueuses sur votre compte.Veuillez vérifier Mr/Mm "+ username  +" que votre mot de passe est sécurisé et que personne d'autre n'a accès à votre compte.");
+                javaMailSender.send(mailMessage);
+                System.out.println("Alert: Too many failed login attempts for user " + username);
+                loginAttempts.put(username,0);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Too many failed login attempts! Please check your email for further instructions."));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid username or password!"));
+        }
+        UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(loginRequest.getUsername());
         if (!userDetails.isVerified()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse("Error: Account not verified!"));
         }
@@ -207,12 +242,9 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
         ResponseCookie jwt = jwtUtils.generateJwtCookie(userDetails);
-        // Vérifier si le mot de passe correspond au mot de passe stocké dans la base de données
         if (!encoder.matches(loginRequest.getPassword(), userDetails.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid password!"));
         }
-
-
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwt.toString())
                 .body(new JwtResponse(jwt.toString(),
                         userDetails.getId(),
@@ -224,13 +256,11 @@ public class AuthController {
 
 
 
-
-
      ////////////
     //Déconnexion
      ////////////
     @PostMapping("/signout")
-    public ResponseEntity<?> logoutUser() {
+    public ResponseEntity<?> logout() {
         ResponseCookie cookie = jwtUtils.getCleanJwtCookie();
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(new MessageResponse("You've been signed out!"));
@@ -242,14 +272,13 @@ public class AuthController {
     // Envoyer un email avec code de vérification (Reset Password)
     ////////////
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPassRequest forgotPassRequest, HttpServletRequest request) {
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPassRequest forgotPassRequest) {
         if (!userRepository.existsByEmail(forgotPassRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("il n'existe aucun utilisateur avec cet email, vérifiez vos données"));
         } else {
         User user = userRepository.findUserByEmail(forgotPassRequest.getEmail());
-        // Générer un code de vérification aléatoire
 
             String code = UUID.randomUUID().toString();
 
@@ -258,7 +287,6 @@ public class AuthController {
             mailMessage.setText(" Bonjour vous trouvez ci-joint un code de vérification pour réinitialiser votre mot de passe : "+ code);
             javaMailSender.send(mailMessage);
 
-            // Enregistrer le code de vérification dans la base de données
             user.setResetpasswordcode(code);
             user.setVerified(false);
 
@@ -274,7 +302,6 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPassRequest resetPassRequest) {
-        // Vérifier si l'utilisateur existe
         if (!userRepository.existsByEmail(resetPassRequest.getEmail()) ){
             return ResponseEntity
                     .badRequest()
@@ -283,12 +310,10 @@ public class AuthController {
         User user = userRepository.findUserByEmail(resetPassRequest.getEmail());
 
 
-        // Vérifier si le code de vérification est valide
         if (!user.getResetpasswordcode().equals(resetPassRequest.getResetpasswordcode())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Invalid verification code!"));
         }
 
-        // Enregistrer le nouveau mot de passe dans la base de données
         user.setPassword(encoder.encode(resetPassRequest.getPassword()));
         user.setVerified(true);
         userRepository.save(user);

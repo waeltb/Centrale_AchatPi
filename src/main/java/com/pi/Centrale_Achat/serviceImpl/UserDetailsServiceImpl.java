@@ -2,6 +2,7 @@ package com.pi.Centrale_Achat.serviceImpl;
 
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.UserRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,9 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
+
 public class UserDetailsServiceImpl implements UserDetailsService {
-    @Autowired
-    UserRepo userRepository;
+    private final  UserRepo userRepository;
 
     @Override
     @Transactional
