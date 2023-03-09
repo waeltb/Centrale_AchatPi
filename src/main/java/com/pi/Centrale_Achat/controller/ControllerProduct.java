@@ -1,7 +1,6 @@
 package com.pi.Centrale_Achat.controller;
 
 
-import com.pi.Centrale_Achat.dto.DiscountDto;
 import com.pi.Centrale_Achat.entities.Product;
 
 import com.pi.Centrale_Achat.entities.User;
@@ -53,11 +52,8 @@ public class ControllerProduct {
         return ResponseEntity.ok(products);
     }
     @GetMapping("/userProducts")
-    public ResponseEntity< List<Product>>showUser_Products(@AuthenticationPrincipal UserDetails userDetails){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      String currentUserName=  authentication.getName();
-        User currentUser = userRepo.findUserByUsername(currentUserName);
-        List<Product> products=productService.show_User_Products( currentUser);
+    public ResponseEntity< List<Product>>showUser_Products(){
+        List<Product> products=productService.show_User_Products();
         return ResponseEntity.ok(products);
     }
 
@@ -102,27 +98,12 @@ public class ControllerProduct {
                 .body(productService.findByIdImage(id));
     }
 
-    @DeleteMapping("/{idP}")
-    public ResponseEntity<?> delete(@PathVariable int idP){
+    @DeleteMapping("/idP")
+    public ResponseEntity<?> delete(int idP){
         productService.delete(idP);
         return new ResponseEntity<>("produit supprimer avec success", HttpStatus.OK);
     }
 
-    @PostMapping("/applyDiscount/{idProduct}")
-    public ResponseEntity<?> apply_discount(@PathVariable int idProduct,@RequestBody DiscountDto discountDto){
-        productService.apply_discount(idProduct,discountDto);
-        return ResponseEntity.ok("discount avec success");
-    }
-
-    @PostMapping("/provideTender/{idTender}")
-    public ResponseEntity<?> provide_Tender(@AuthenticationPrincipal UserDetails userDetails ,@RequestParam String name,@RequestParam float price, @RequestParam int qte
-            ,@RequestParam String description,@RequestParam int minStock,@RequestParam int idCategory, @RequestParam MultipartFile file,@PathVariable int idTender)throws IOException {
-        productService.provide_Tender(userDetails,name, price, qte, description, minStock, idCategory, file,idTender);
-        return ResponseEntity.ok("produit fournit avec success");
-    }
-
-
-
-    }
+}
 
 

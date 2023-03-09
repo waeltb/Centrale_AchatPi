@@ -13,7 +13,7 @@ public interface ProductService {
     List<Product> show_AllProducts();
     List<Product> show_ProductsOf_Category(int idCategory);
 
-    List<Product>show_User_Products( User currentUser);
+    List<Product>show_User_Products();
 
 
 
