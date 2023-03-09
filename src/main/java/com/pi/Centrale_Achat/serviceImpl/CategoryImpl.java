@@ -56,14 +56,7 @@ for (Category c : categories){
 
     }
 }
-//        int iduser = ca.getUser().getId();
-//        if (!(user1.getId()==iduser)) {
-//            System.out.println("erreur");
-//        }
-//        ca.setNameCategory(ca.getNameCategory());
-//        categoryRepo.save(ca);
-//
-//        return ca ;
+
         return category;
     }
 
