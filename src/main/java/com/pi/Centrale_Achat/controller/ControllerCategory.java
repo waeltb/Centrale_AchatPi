@@ -2,6 +2,8 @@ package com.pi.Centrale_Achat.controller;
 
 import com.pi.Centrale_Achat.entities.Category;
 
+ Manage_User
+
 import com.pi.Centrale_Achat.entities.User;
 import com.pi.Centrale_Achat.repositories.CategoryRepo;
 import com.pi.Centrale_Achat.repositories.UserRepo;
@@ -77,7 +79,9 @@ public class ControllerCategory {
         if (currentUser==null) {
             System.out.println("Vous devez se connecter");
         }
+
                     if (!(currentUser.getId()==cat.getUser().getId())){
+
                 return new ResponseEntity<>("erreur", HttpStatus.FORBIDDEN);
             }
             else {

@@ -48,11 +48,13 @@ public class CategoryImpl implements CategoryService {
         String currentUser = userDetails.getUsername();
         User user1 = userRepo.findUserByUsername(currentUser);
         Category category = new Category();
+
         if (cat.getUser().getId()==user1.getId()){
             cat.setNameCategory(ca.getNameCategory());
         categoryRepo.save(cat);
         }
         return cat;
+
     }
 
     @Override

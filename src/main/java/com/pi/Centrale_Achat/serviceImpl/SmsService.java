@@ -1,24 +1,36 @@
 package com.pi.Centrale_Achat.serviceImpl;
 
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
-import org.springframework.beans.factory.annotation.Value;
+
+
+
+import com.pi.Centrale_Achat.entities.SmsRequest;
+import com.pi.Centrale_Achat.service.SmsSender;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+//import javax.transaction.Transactional;
 
 @Service
+@RequiredArgsConstructor
+//@Transactional
+@Transactional
+@Slf4j
 public class SmsService {
-    @Value("${twilio.account.sid}")
-    private String accountSid;
+    private final SmsSender smsSender ;
 
-    @Value("${twilio.auth.token}")
-    private String authToken;
+   @Autowired
+    public SmsService(@Qualifier("twilio") TwilioSmsSender smsSender){
+        this.smsSender = smsSender;
+    }
+    public void sendSms(SmsRequest smsRequest ) {
 
-    @Value("${twilio.phone.number}")
-    private String from;
+        smsSender.sendSms(smsRequest);
+    }
 
-    public void sendSMS(String recipient, String body) {
-        Twilio.init(accountSid, authToken);
-        Message message = Message.creator(new PhoneNumber(recipient), new PhoneNumber(from), body).create();
+    public void sendSMS(String smsRecipient, String message) {
     }
 }

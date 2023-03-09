@@ -77,6 +77,38 @@ public class BillServiceImpl implements BillService {
         return bb;
     }
 
+    private Coupon getCoupon()  {
+        Calendar calendar = Calendar.getInstance();
+        Date date = new Date();
+        calendar.setTime(date);
+        calendar.add(Calendar.DAY_OF_YEAR, 7);
+        Date newDate = calendar.getTime();
+        Coupon coupon = new Coupon();
+        coupon.setCode(generateCode());
+        coupon.setDiscountPercentage((float) 0.2);
+        coupon.setExpirationDate(newDate) ;
+        return coupon;
+    }
+    @Scheduled(fixedRate = 10000)
+    public String generateCode() {
+        final Random rnd = new Random(12345);
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            int index = rnd.nextInt(chars.length());
+            char randomChar = chars.charAt(index);
+            sb.append(randomChar);
+        }
+        String code = sb.toString();
+      //  System.out.println(code);
+        return code;
+    }
+    public float calculFactureAvecCodePromo(int id)  {
+        float m =  calculeFacture(id);
+        return applyDiscount(m);
+    }
+
+
 
 
 

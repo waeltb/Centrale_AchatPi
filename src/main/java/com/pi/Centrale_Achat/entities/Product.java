@@ -34,6 +34,7 @@ public class Product implements Serializable {
     private float discount;
     private int rating;
     private int numberOfRates = 0;
+    boolean accepted;
     @JsonIgnore
     @ManyToMany(mappedBy = "products", cascade = {CascadeType.PERSIST})
     List<Order> orders;
@@ -49,5 +50,16 @@ public class Product implements Serializable {
     @JsonIgnore
     @ManyToOne
     Tender tender;
+    public boolean isAccepted() {
+        return accepted;
+    }
+    @OneToMany(mappedBy = "product",cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
+    List<OperatorScore> operatorScores;
+    public Product(String name, String description, String imageUrl) {
+        this.name = name;
+        this.description = description;
+        this.image = imageUrl;
+
+    }
 
 }

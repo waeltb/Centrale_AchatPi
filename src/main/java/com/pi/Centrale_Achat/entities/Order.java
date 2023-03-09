@@ -34,7 +34,7 @@ public class Order implements Serializable {
     @JsonIgnore
     @ManyToOne
     User user;
-    @OneToOne(mappedBy = "order", cascade = {CascadeType.PERSIST})
+    @OneToOne(mappedBy = "order")
     Delivery delivery;
     @OneToMany(mappedBy = "order", cascade = {CascadeType.PERSIST})
     List<RequestClaim>requestClaims;
